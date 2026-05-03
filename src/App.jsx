@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { CatInfoPanel } from './components/CatInfoPanel.jsx';
 import { CatDiary } from './components/CatDiary.jsx';
+import { CatRosterScreen } from './components/CatRosterScreen.jsx';
 import { CatRoster } from './components/CatRoster.jsx';
 import { Diorama } from './components/Diorama.jsx';
 import { EventCardStack } from './components/EventCardStack.jsx';
@@ -15,11 +16,30 @@ import { sampleTransitionDue } from './store/transitions.js';
 
 const DRAG_THRESHOLD = 8;
 
+function useDesktopLayout() {
+  const [isDesktop, setIsDesktop] = useState(() =>
+    typeof window === 'undefined' ? false : window.matchMedia('(min-width: 641px)').matches,
+  );
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(min-width: 641px)');
+    const handleChange = () => setIsDesktop(mediaQuery.matches);
+    handleChange();
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+
+  return isDesktop;
+}
+
 function Game() {
   const { state, setState, liveEvents, dismissLiveEvent } = useGameState();
+  const isDesktop = useDesktopLayout();
   const [activeCatInfoId, setActiveCatInfoId] = useState(null);
   const [activeRoomId, setActiveRoomId] = useState(null);
+  const [sidePanel, setSidePanel] = useState('cats');
   const [diaryOpen, setDiaryOpen] = useState(false);
+  const [catsOpen, setCatsOpen] = useState(false);
   const [dragState, setDragState] = useState(null);
   const [hoveredRoomId, setHoveredRoomId] = useState(null);
   const [roomMessage, setRoomMessage] = useState(null);
@@ -172,24 +192,63 @@ function Game() {
     window.location.reload();
   }
 
+  function openCats() {
+    if (isDesktop) {
+      setSidePanel('cats');
+    } else {
+      setCatsOpen(true);
+    }
+  }
+
+  function openHouse() {
+    setCatsOpen(false);
+    setDiaryOpen(false);
+    setActiveRoomId(null);
+    setActiveCatInfoId(null);
+    if (isDesktop) {
+      setSidePanel('cats');
+    }
+  }
+
+  function openRoomDetail(roomId) {
+    setActiveRoomId(roomId);
+    if (isDesktop) {
+      setSidePanel('room');
+    }
+    if (state.tutorialStep === 3) {
+      setState((currentState) => ({ ...currentState, tutorialStep: 4 }));
+    }
+  }
+
   return (
     <div className="app-shell">
       <ResourceBar />
       <div className="top-actions">
+        <button type="button" onClick={openCats}>Cats</button>
         <button type="button" onClick={() => setDiaryOpen(true)}>Diary</button>
       </div>
-      <Diorama
-        draggingCatId={dragState?.isDragging ? dragState.catId : null}
-        hoveredRoomId={hoveredRoomId}
-        roomMessage={roomMessage}
-        onOpenCatInfo={setActiveCatInfoId}
-        onOpenRoomDetail={(roomId) => {
-          setActiveRoomId(roomId);
-          if (state.tutorialStep === 3) {
-            setState((currentState) => ({ ...currentState, tutorialStep: 4 }));
-          }
-        }}
-      />
+      <div className="game-layout">
+        <Diorama
+          draggingCatId={dragState?.isDragging ? dragState.catId : null}
+          hoveredRoomId={hoveredRoomId}
+          roomMessage={roomMessage}
+          onOpenCatInfo={setActiveCatInfoId}
+          onOpenRoomDetail={openRoomDetail}
+        />
+        <aside className="desktop-side-panel" aria-label="Tower side panel">
+          {sidePanel === 'room' && activeRoomId ? (
+            <RoomDetailPanel
+              roomId={activeRoomId}
+              embedded
+              onOpenCatInfo={(catId) => {
+                setActiveCatInfoId(catId);
+              }}
+            />
+          ) : (
+            <CatRosterScreen embedded />
+          )}
+        </aside>
+      </div>
       <div className="debug-row">
         <button className="debug-reset" type="button" onClick={handleResetSave}>
           Reset save
@@ -211,7 +270,7 @@ function Game() {
         </div>
       ) : null}
       {activeCatInfoId ? <CatInfoPanel catId={activeCatInfoId} onClose={() => setActiveCatInfoId(null)} /> : null}
-      {activeRoomId ? (
+      {activeRoomId && !isDesktop ? (
         <RoomDetailPanel
           roomId={activeRoomId}
           onClose={() => setActiveRoomId(null)}
@@ -220,10 +279,16 @@ function Game() {
           }}
         />
       ) : null}
+      {catsOpen ? <CatRosterScreen onClose={() => setCatsOpen(false)} /> : null}
       {diaryOpen ? <CatDiary onClose={() => setDiaryOpen(false)} /> : null}
       <EventCardStack events={liveEvents} onDismiss={dismissLiveEvent} />
       <Tutorial />
       <OfflineSummaryOverlay />
+      <nav className="mobile-tab-bar" aria-label="Main tabs">
+        <button type="button" onClick={openHouse}>House</button>
+        <button type="button" onClick={openCats}>Cats</button>
+        <button type="button" onClick={() => setDiaryOpen(true)}>Diary</button>
+      </nav>
     </div>
   );
 }

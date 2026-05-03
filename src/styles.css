@@ -34,10 +34,15 @@ button {
 
 .app-shell {
   min-height: 100vh;
-  padding-bottom: 116px;
+  padding-bottom: 168px;
   background:
     linear-gradient(180deg, rgba(255, 250, 238, 0.92), rgba(244, 232, 213, 0.96)),
     #f6efe4;
+}
+
+.game-layout {
+  width: min(100%, 1180px);
+  margin: 0 auto;
 }
 
 .app-main {
@@ -357,6 +362,7 @@ button {
 
 .top-actions {
   display: flex;
+  gap: 8px;
   justify-content: center;
   padding: 10px 16px 0;
 }
@@ -367,6 +373,10 @@ button {
   background: #5b4636;
   color: #fff8eb;
   font-weight: 900;
+}
+
+.desktop-side-panel {
+  display: none;
 }
 
 .cat-sprite img,
@@ -380,7 +390,7 @@ button {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 0;
+  bottom: 62px;
   z-index: 30;
   display: flex;
   align-items: center;
@@ -391,6 +401,27 @@ button {
   border-top: 1px solid rgba(83, 64, 48, 0.16);
   background: rgba(255, 250, 241, 0.96);
   backdrop-filter: blur(10px);
+}
+
+.mobile-tab-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 35;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  padding: 0 0 env(safe-area-inset-bottom);
+  border-top: 1px solid rgba(83, 64, 48, 0.16);
+  background: rgba(83, 64, 48, 0.16);
+}
+
+.mobile-tab-bar button {
+  border-radius: 0;
+  background: rgba(255, 250, 241, 0.98);
+  color: #5b4636;
+  font-weight: 900;
 }
 
 .cat-roster-empty {
@@ -468,7 +499,8 @@ button {
 }
 
 .room-detail-panel,
-.diary-panel {
+.diary-panel,
+.cat-roster-screen {
   position: relative;
   width: min(100%, 520px);
   max-height: min(86vh, 760px);
@@ -497,7 +529,9 @@ button {
 .room-detail-panel h2,
 .room-detail-panel p,
 .diary-panel h2,
-.diary-panel p {
+.diary-panel p,
+.cat-roster-screen h2,
+.cat-roster-screen p {
   margin: 0;
 }
 
@@ -511,7 +545,8 @@ button {
 
 .room-cat-card,
 .furniture-slot,
-.diary-entry {
+.diary-entry,
+.cat-screen-card {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -523,6 +558,138 @@ button {
   background: #fffdf7;
   color: #2f2a24;
   text-align: left;
+}
+
+.screen-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 12px;
+  padding-right: 50px;
+}
+
+.screen-header h2 {
+  font-size: 1.45rem;
+}
+
+.cat-screen-grid {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.cat-screen-card {
+  position: relative;
+  padding-right: 48px;
+}
+
+.cat-screen-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.cat-screen-copy strong {
+  font-size: 1rem;
+}
+
+.cat-screen-copy small {
+  color: #756252;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.cat-screen-state,
+.profile-state-icon {
+  display: grid;
+  place-items: center;
+  border: 2px solid rgba(67, 45, 30, 0.35);
+  border-radius: 50%;
+  background: #fff8eb;
+}
+
+.cat-screen-state {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  width: 28px;
+  height: 28px;
+  transform: translateY(-50%);
+}
+
+.cat-screen-state svg,
+.profile-state-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.cat-profile {
+  position: relative;
+}
+
+.cat-profile h4 {
+  margin: 18px 0 8px;
+  font-size: 1rem;
+}
+
+.back-button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  background: rgba(91, 70, 54, 0.12);
+  color: #5b4636;
+}
+
+.back-button svg {
+  width: 20px;
+  height: 20px;
+}
+
+.cat-profile-header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.cat-profile-header h3,
+.cat-profile-header p {
+  margin: 0;
+}
+
+.cat-profile-header h3 {
+  font-size: 1.35rem;
+}
+
+.cat-profile-header p {
+  color: #756252;
+  font-weight: 800;
+}
+
+.profile-state-icon {
+  width: 34px;
+  height: 34px;
+}
+
+.profile-relationships {
+  display: grid;
+  gap: 8px;
+}
+
+.relationship-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 2px solid rgba(83, 64, 48, 0.12);
+  border-radius: 8px;
+  background: #fffdf7;
+  text-transform: capitalize;
 }
 
 .room-cat-card span {
@@ -865,7 +1032,63 @@ body[data-tutorial-step="4"] [data-tutorial-target="upgrade-button"] {
 
   .cat-info-panel,
   .room-detail-panel,
-  .diary-panel {
+  .diary-panel,
+  .cat-roster-screen {
     border-radius: 8px;
+  }
+}
+
+@media (min-width: 641px) {
+  .app-shell {
+    padding-bottom: 0;
+  }
+
+  .game-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(300px, 2fr);
+    align-items: start;
+    gap: 18px;
+    padding: 0 18px 22px;
+  }
+
+  .app-main {
+    width: 100%;
+    padding: 22px 0;
+  }
+
+  .desktop-side-panel {
+    position: sticky;
+    top: 74px;
+    display: block;
+    max-height: calc(100vh - 92px);
+    padding: 22px 0;
+    overflow: auto;
+  }
+
+  .room-detail-panel.embedded,
+  .cat-roster-screen.embedded {
+    width: 100%;
+    max-height: none;
+    margin: 0;
+    box-shadow: 0 8px 22px rgba(47, 42, 36, 0.13);
+  }
+
+  .room-detail-panel.embedded .panel-close {
+    display: none;
+  }
+
+  .mobile-tab-bar {
+    display: none;
+  }
+
+  .cat-roster {
+    left: 18px;
+    right: auto;
+    bottom: 18px;
+    width: min(680px, calc(60vw - 22px));
+    min-height: 88px;
+    border: 1px solid rgba(83, 64, 48, 0.16);
+    border-radius: 8px;
+    box-shadow: 0 8px 22px rgba(47, 42, 36, 0.12);
   }
 }

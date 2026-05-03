@@ -9,7 +9,7 @@ import { calculateCatOutput, isDislikeActive, isLikeActive } from '../store/prod
 import { CatPortrait } from './CatPortrait.jsx';
 import { FurnitureSlot } from './FurnitureSlot.jsx';
 
-export function RoomDetailPanel({ roomId, onClose, onOpenCatInfo }) {
+export function RoomDetailPanel({ roomId, onClose, onOpenCatInfo, embedded = false }) {
   const { state, setState } = useGameState();
   const room = rooms.find((entry) => entry.id === roomId);
   const savedRoom = state.rooms.find((entry) => entry.id === roomId);
@@ -39,12 +39,18 @@ export function RoomDetailPanel({ roomId, onClose, onOpenCatInfo }) {
     });
   }
 
-  return (
-    <div className="panel-backdrop" role="presentation" onClick={onClose}>
-      <aside className="room-detail-panel" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
+  const content = (
+    <aside
+      className={`room-detail-panel ${embedded ? 'embedded' : ''}`}
+      role={embedded ? 'region' : 'dialog'}
+      aria-modal={embedded ? undefined : 'true'}
+      onClick={(event) => event.stopPropagation()}
+    >
+      {onClose ? (
         <button className="panel-close" type="button" onClick={onClose} aria-label="Close room detail">
           <X aria-hidden="true" />
         </button>
+      ) : null}
         <header>
           <h2>{room.name}</h2>
           <p>
@@ -101,6 +107,15 @@ export function RoomDetailPanel({ roomId, onClose, onOpenCatInfo }) {
           </button>
         ) : null}
       </aside>
+  );
+
+  if (embedded) {
+    return content;
+  }
+
+  return (
+    <div className="panel-backdrop" role="presentation" onClick={onClose}>
+      {content}
     </div>
   );
 }
