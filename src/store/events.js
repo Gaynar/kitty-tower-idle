@@ -146,7 +146,8 @@ export function processEvents(state, nowMs = Date.now(), { force = false, offlin
     for (const cat of catsInRoom) {
       const eligibleEvents = events.filter((event) => {
         const cooldownAt = nextState.eventCooldowns?.[event.id] ?? 0;
-        return nowMs - cooldownAt >= COOLDOWN_MS && event.matches?.(cat, room, catsInRoom, nextState);
+        const eventContextState = offline ? { ...nextState, isOfflineEventCheck: true } : nextState;
+        return nowMs - cooldownAt >= COOLDOWN_MS && event.matches?.(cat, room, catsInRoom, eventContextState);
       });
 
       for (const event of eligibleEvents) {

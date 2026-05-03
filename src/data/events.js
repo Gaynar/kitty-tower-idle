@@ -55,7 +55,7 @@ export const events = [
     effect: { type: 'coins_or_comfort_gain', diaryEntry: 'midnight_playtime' },
     cooldownMinutes: 30,
     isRare: true,
-    matches: (cat) => hasTrait(cat, 'playful'),
+    matches: (cat, _room, _catsInRoom, state) => Boolean(state.isOfflineEventCheck) && hasTrait(cat, 'playful'),
   },
   {
     id: 'quiet_afternoon',
