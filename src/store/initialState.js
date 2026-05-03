@@ -37,6 +37,7 @@ export function createInitialState() {
     })),
     rooms: roomData.map((room) => ({
       id: room.id,
+      towerFloor: room.towerFloor,
       level: 1,
       furniture: [],
       unlocked: true,

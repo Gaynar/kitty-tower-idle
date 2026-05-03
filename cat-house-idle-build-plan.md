@@ -15,7 +15,7 @@ This plan breaks the implementation of [cat-house-idle-gdd-v4.md](cat-house-idle
 
 # PHASE 1 — Playable MVP (Steps 1–6)
 
-Goal: a player opens the page, sees a cutaway house with 3 rooms, drags 3 cats into rooms, and watches Coins + Comfort tick up correctly per the GDD's production formula. No states, no furniture, no events, no diary, no tutorial. Save/load works.
+Goal: a player opens the page, sees a cutaway cat tower with 3 stacked rooms, drags 3 cats into rooms, and watches Coins + Comfort tick up correctly per the GDD's production formula. No states, no furniture, no events, no diary, no tutorial. Save/load works.
 
 ---
 
@@ -51,7 +51,7 @@ Goal: a player opens the page, sees a cutaway house with 3 rooms, drags 3 cats i
 **Do:** Create the following files with `export const` / `export default` data structures. No functions.
 
 1. **`src/data/cats.js`** — array of the 3 launch cats (Miso, Bean, Mochi). Each entry: `id`, `name`, `traits` (array), `like` (string id), `dislike` (string id), `favoriteFurniture` (id), `flavorText`, `role`. Use the IDs `miso`, `bean`, `mochi`. Likes per Section 17 (e.g. Miso `"bedroom"`, Bean `"company"`, Mochi `"alone_kitchen"`). Dislikes: Miso `"crowded_room"`, Bean `"alone_offline"`, Mochi `"grumpy_cat_nearby"`.
-2. **`src/data/rooms.js`** — array of the 3 launch rooms. Each: `id`, `name`, `baseCapacity`, `maxCapacity`, `produces` (array of `"coins"`/`"comfort"`), `baseRates` (object mapping condition → `{coins, comfort}` per minute, encoding the tables in Section 6.2). E.g. `kitchen.baseRates = { mochi_alone: { coins: 2, comfort: 0 }, default: { coins: 0.8, comfort: 0 } }`. Add `furnitureSlots` per level (1 slot at L1, 2 at L2, 3 at L3 — pick a sensible number; the GDD doesn't pin this, so use 1/2/3).
+2. **`src/data/rooms.js`** — array of the 3 launch rooms. Each: `id`, `name`, `towerFloor` (Kitchen = 1, Living Room = 2, Bedroom = 3), `baseCapacity`, `maxCapacity`, `produces` (array of `"coins"`/`"comfort"`), `baseRates` (object mapping condition → `{coins, comfort}` per minute, encoding the tables in Section 6.2). E.g. `kitchen.baseRates = { mochi_alone: { coins: 2, comfort: 0 }, default: { coins: 0.8, comfort: 0 } }`. Add `furnitureSlots` per level (1 slot at L1, 2 at L2, 3 at L3 — pick a sensible number; the GDD doesn't pin this, so use 1/2/3).
 3. **`src/data/furniture.js`** — array of the 10 launch furniture items from Section 6.3 + GDD A.5. Each: `id`, `name`, `roomId` (which room it belongs to), `cost` (`{coins, comfort}`), `effect` (object describing the bonus, e.g. `{ type: 'flat_comfort', value: 1, appliesTo: 'lazy' }`). Encode the costs from Section 6.3 exactly. Capture the special effects called out in Section 11 / Section 7.3 (e.g. Quiet Corner removes Grumpy after 8 min flat).
 4. **`src/data/states.js`** — exports `STATES` (array of state ids matching Section 7.3), `STATE_EFFECTS` (the table in Section 7.3 mapping state → `{coinsMod, comfortMod, notes}`), `TRANSITIONS` (the transition table from Section 7.3, each entry `{from, to, trigger: 'time'|'event', condition, durationMinutes: [min,max] | null}`).
 5. **`src/data/events.js`** — array of the 8 launch events from Section 13.4 + the synergies/conflicts/discoveries in Section 11. Each: `id`, `title`, `flavor`, `triggerCondition` (descriptive object — actual matching logic comes later), `effect` (descriptive), `cooldownMinutes: 30` (Section 13.3), `isRare: false` (true for the 1+ rare entries the diary needs).
@@ -72,7 +72,7 @@ Goal: a player opens the page, sees a cutaway house with 3 rooms, drags 3 cats i
 **Inputs:** GDD Section 16.4 (data schema — read carefully, this is the contract), 16.7 (edge cases — missing fields default silently), Section 16.1 (auto-save every 60s + on `visibilitychange`). Memory: schema additions vs v3 (eventCooldowns top-level, stateTransitionDue per cat, roomSessions, relationships as `{score}` only, currentRoom can be null, diary entries as `{id, discoveredAt}`, resources are floats, save key `catHouseIdle_save`).
 
 **Do:**
-1. **`src/store/initialState.js`** — exports `createInitialState()` returning the starter save object matching Section 16.4. Resources start at `0.0`. `lastTickTimestamp = Date.now()`. All 3 cats present with `currentRoom: null`, `currentState: 'active'`, `stateEnteredAt: Date.now()`, `stateTransitionDue: null`, empty `relationships` map seeded with all other cat ids at `{score: 0}`, empty `roomSessions: {}`. All 3 rooms unlocked at level 1, no furniture. Empty `diary.interactions/events/hints`. `diary.catProfiles` seeded with each cat's known like/dislike from the data files. `tutorialStep: 0`. `eventCooldowns: {}`. `offlineEventQueue: []`. `version: 1`.
+1. **`src/store/initialState.js`** — exports `createInitialState()` returning the starter save object matching Section 16.4. Resources start at `0.0`. `lastTickTimestamp = Date.now()`. All 3 cats present with `currentRoom: null`, `currentState: 'active'`, `stateEnteredAt: Date.now()`, `stateTransitionDue: null`, empty `relationships` map seeded with all other cat ids at `{score: 0}`, empty `roomSessions: {}`. All 3 rooms unlocked at level 1 with `towerFloor` copied from `src/data/rooms.js`, no furniture. Empty `diary.interactions/events/hints`. `diary.catProfiles` seeded with each cat's known like/dislike from the data files. `tutorialStep: 0`. `eventCooldowns: {}`. `offlineEventQueue: []`. `version: 1`.
 2. **`src/store/persistence.js`** — exports `saveGame(state)` (writes JSON to `localStorage['catHouseIdle_save']`) and `loadGame()` (reads, parses, deep-merges over `createInitialState()` so missing fields default silently per Section 16.7; returns the merged state, or fresh state if absent / parse fails).
 3. **`src/store/gameState.js`** — exports a React context `GameStateContext` and a `GameStateProvider` component. Provider holds state with `useState`, calls `loadGame()` on mount. Auto-save: a `useEffect` that calls `saveGame(state)` every 60s with `setInterval`, and one that listens to `document.visibilitychange` and saves immediately when the page becomes hidden. Provides `{state, setState}` (or a small action API — your call, but keep it minimal for now).
 4. Wire `<GameStateProvider>` into `App.jsx`. In `App.jsx`, render the current `coins` and `comfort` (as `Math.floor`) just to prove the state plumbing works.
@@ -89,18 +89,18 @@ Goal: a player opens the page, sees a cutaway house with 3 rooms, drags 3 cats i
 
 ## Step 4 — Diorama shell + resource bar
 
-**Goal:** The visible house — a side-cutaway diorama with 3 stacked rooms (placeholder colored backgrounds) and a top resource bar showing Coins + Comfort. No interaction yet.
+**Goal:** The visible tower — a side-cutaway diorama with 3 stacked rooms (placeholder colored backgrounds) and a top resource bar showing Coins + Comfort. No interaction yet.
 
 **Inputs:** GDD Section 16.5 (UI layout), Appendix A.4 (room style notes, placeholder colors: muted green = Living Room, warm orange = Kitchen, soft blue = Bedroom). Memory: web layout breakpoint at 640px (do mobile-first single-column for now; responsive comes in Step 17).
 
 **Do:**
 1. **`src/components/ResourceBar.jsx`** — sticky top bar showing Coins (Lucide `Coins` icon) and Comfort (Lucide `Heart` icon) with `Math.floor()` values from state.
-2. **`src/components/Diorama.jsx`** — vertical stack of 3 `<RoomView>` components in the order Living Room (top), Kitchen (middle), Bedroom (bottom). Just a sensible default — the GDD doesn't pin order.
-3. **`src/components/RoomView.jsx`** — renders one room. Props: `roomId`. Shows a placeholder-colored rectangle (per A.4 colors) sized 16:9. Background should attempt to load `/assets/rooms/{roomId}_{level}.png` and fall back to the colored rectangle if the image is missing (use `onError`). Apply `.pixel-art` class to the `<img>`. Show the room name as a label.
+2. **`src/components/Diorama.jsx`** — vertical stack of 3 `<RoomView>` components sorted by `towerFloor` descending, so Bedroom (3F) renders above Living Room (2F), which renders above Kitchen (1F). Add simple tower framing such as a roof/foundation so the rooms read as one vertical structure.
+3. **`src/components/RoomView.jsx`** — renders one room. Props: `roomId`. Shows a placeholder-colored rectangle (per A.4 colors) sized 16:9. Background should attempt to load `/assets/rooms/{roomId}_{level}.png` and fall back to the colored rectangle if the image is missing (use `onError`). Apply `.pixel-art` class to the `<img>`. Show the room name and floor label.
 4. Update `App.jsx` to render `<ResourceBar />` and `<Diorama />`.
 
 **Acceptance:**
-- 3 rooms visible, stacked vertically, each labeled.
+- 3 rooms visible, stacked vertically by floor, each labeled.
 - Resource bar shows current Coins/Comfort and updates if you mutate state in DevTools.
 - Missing image files don't break the layout (fallback colors render).
 - `.pixel-art` class applied to room background `<img>` elements.

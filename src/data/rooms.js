@@ -2,6 +2,7 @@ export const rooms = [
   {
     id: 'living_room',
     name: 'Living Room',
+    towerFloor: 2,
     baseCapacity: 2,
     maxCapacity: 3,
     produces: ['coins', 'comfort'],
@@ -19,6 +20,7 @@ export const rooms = [
   {
     id: 'kitchen',
     name: 'Kitchen',
+    towerFloor: 1,
     baseCapacity: 1,
     maxCapacity: 2,
     produces: ['coins'],
@@ -35,6 +37,7 @@ export const rooms = [
   {
     id: 'bedroom',
     name: 'Bedroom',
+    towerFloor: 3,
     baseCapacity: 2,
     maxCapacity: 3,
     produces: ['comfort'],

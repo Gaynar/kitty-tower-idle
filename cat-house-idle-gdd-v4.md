@@ -2,21 +2,23 @@
 
 > **Revision notes (v4):** Art direction locked to **painterly HD pixel** style — high-resolution pixel art with large palettes, dithered fur/fabric texture, dark silhouette outlines, and no interior outlines. Section 21 expanded with full style specification. Appendix A updated with technical pixel art specs: resolution, palette rules, anti-aliasing requirements, `image-rendering: pixelated` CSS, animation frame stub, and per-asset production notes.
 >
+> **Tower direction update:** House expansion now means building upward into a cozy vertical cat tower. Rooms have explicit tower floors; new rooms are added above the current top floor.
+>
 > Previous revision (v3) scoped roster to 3 launch cats, locked starting rooms to 3, introduced the Like/Dislike trait system, and added the initial asset guide. All prior content remains in force.
 
 ---
 
 ## 1. High Concept
 
-Cat House Idle is a cozy idle management game about caring for a small group of unique cats while gradually building, expanding, and personalizing a warm cat-filled home.
+Cat House Idle is a cozy idle management game about caring for a small group of unique cats while gradually building, expanding, and personalizing a warm vertical cat tower.
 
-Unlike traditional idle games that focus on collecting hundreds of units or endlessly scaling production numbers, Cat House Idle focuses on a limited cast of memorable cats and a house that grows room by room. Each cat has distinct traits, a clear Like and Dislike that shape how they interact with rooms, and relationships that influence how different rooms perform.
+Unlike traditional idle games that focus on collecting hundreds of units or endlessly scaling production numbers, Cat House Idle focuses on a limited cast of memorable cats and a tower that grows floor by floor. Each cat has distinct traits, a clear Like and Dislike that shape how they interact with rooms, and relationships that influence how different rooms perform.
 
 The player does not directly control the cats. Instead, they shape the environment around them by assigning cats to rooms, upgrading spaces, placing furniture, expanding the house, and discovering how each cat responds to different conditions.
 
 The fantasy is simple:
 
-> Build a cozy home, expand it room by room, place your cats wisely, return later, and see how your household has grown.
+> Build a cozy tower, expand it room by room, place your cats wisely, return later, and see how your household has grown upward.
 
 ---
 
@@ -38,9 +40,9 @@ A small roster only works if every cat feels mechanically and emotionally distin
 
 ### 2.2 Room Building as Core Progression
 
-The house is the main progression system. The player starts with 3 rooms and expands the house room by room. Progression comes from unlocking new rooms, upgrading existing rooms, adding furniture, and discovering how cats respond to each room's conditions.
+The tower is the main progression system. The player starts with 3 stacked rooms and expands upward, one floor at a time. Progression comes from unlocking new upper floors, upgrading existing rooms, adding furniture, and discovering how cats respond to each room's conditions.
 
-The player should regularly think: "What room should I build next?" and "Which cats benefit most from this?"
+The player should regularly think: "What room should I build on top next?" and "Which cats benefit most from this?"
 
 ### 2.3 Behavior Over Raw Stats
 
@@ -360,7 +362,15 @@ Only `score` is stored. `tier` is always derived from `score` at load time and n
 
 ## 8. Room System
 
-Rooms define the context in which cats behave. The game launches with 3 rooms. Additional rooms are unlocked during mid-game progression.
+Rooms define the context in which cats behave. The game launches with 3 rooms arranged as a vertical starter tower. Additional rooms are unlocked during mid-game progression and are placed above the current top floor.
+
+**Launch tower order:**
+
+| Floor | Room |
+|---|---|
+| 3 | Bedroom |
+| 2 | Living Room |
+| 1 | Kitchen |
 
 ### 8.1 Living Room (Launch)
 
@@ -410,15 +420,19 @@ Rooms define the context in which cats behave. The game launches with 3 rooms. A
 
 ## 9. House Building and Expansion
 
-House building is the central progression system.
+Tower building is the central progression system.
 
 ### 9.1 House Growth Stages
 
-**Stage 1 — Small Starter Home (Launch):** Living Room, Bedroom, Kitchen. Teaches basic placement, Coins and Comfort, cat preferences, Like/Dislike mechanics, furniture, and the Cat Diary.
+**Stage 1 — Starter Cat Tower (Launch):** Kitchen on floor 1, Living Room on floor 2, Bedroom on floor 3. Teaches basic placement, Coins and Comfort, cat preferences, Like/Dislike mechanics, furniture, and the Cat Diary.
 
-**Stage 2 — Expanded Home (Post-Launch):** Adds Garden, Study, Bathroom, Hallway, or Porch. Adds discovery, more placement decisions, and early layout planning.
+**Stage 2 — Taller Tower (Post-Launch):** Adds Garden, Study, Bathroom, Hallway, or Porch as floors above the starter tower. Adds discovery, more placement decisions, and early vertical layout planning.
 
-**Stage 3 — Specialized Cat House (Later):** Adds Sunroom, Playroom, Library Nook, Pantry, Loft, or Cat Tower Room. Supports advanced cat relationships and rare interactions.
+**Stage 3 — Specialized Cat Tower (Later):** Adds Sunroom, Playroom, Library Nook, Pantry, Loft, or Observatory-style tower rooms. Supports advanced cat relationships and rare interactions.
+
+### 9.1.1 Upward Expansion Rule
+
+Each room has a `towerFloor` integer. Floors increase upward. The UI renders higher floor numbers above lower floor numbers. New room unlocks receive the next available floor number unless a future feature explicitly allows reordering.
 
 ### 9.2 Room Expansion Paths
 
@@ -690,18 +704,21 @@ All game state is stored in a single JSON object under the key `catHouseIdle_sav
   "rooms": [
     {
       "id": "bedroom",
+      "towerFloor": 3,
       "level": 1,
       "furniture": [],
       "unlocked": true
     },
     {
       "id": "kitchen",
+      "towerFloor": 1,
       "level": 1,
       "furniture": [],
       "unlocked": true
     },
     {
       "id": "living_room",
+      "towerFloor": 2,
       "level": 1,
       "furniture": [],
       "unlocked": true
@@ -735,6 +752,7 @@ All game state is stored in a single JSON object under the key `catHouseIdle_sav
 - `cat.relationships` stores only `score` (integer). `tier` is derived at load time from the thresholds in Section 7.4 and never stored.
 - `cat.stateTransitionDue` is a Unix ms timestamp sampled once on state entry. Never reset on reload.
 - `cat.roomSessions` tracks completed sessions per room (see Section 14.3 for session definition). `currentRoom: null` means the cat is unassigned and produces no output.
+- `room.towerFloor` stores the room's vertical position. Higher floor numbers render above lower floor numbers. Existing saves missing this field default from `src/data/rooms.js`.
 - `eventCooldowns` is a top-level map of `{ eventId: timestampMs }` marking when each event last fired. Respected during offline simulation.
 - `diary.interactions` and `diary.events` entries are `{ id, discoveredAt }`. Absence = undiscovered.
 - `diary.hints` entries are `{ id, catId, roomId, discoveredAt }`.
@@ -745,9 +763,9 @@ All game state is stored in a single JSON object under the key `catHouseIdle_sav
 
 ### 16.5 UI Layout and Screen Flow
 
-**Visual style:** Side-view diorama. The house is shown as a cutaway from the side, like a dollhouse. Each room is visible as a cross-section.
+**Visual style:** Side-view vertical tower diorama. The house is shown as a tall cutaway from the side, like a stacked dollhouse. Each room is visible as a cross-section, with higher floors above lower floors.
 
-**Mobile layout (< 640px):** Diorama fills the full screen width. Rooms are stacked vertically. Tapping a room opens a bottom sheet panel with cat slots, furniture slots, and the upgrade button. Bottom tab bar: House | Cats | Diary.
+**Mobile layout (< 640px):** Diorama fills the full screen width. Rooms are stacked vertically by `towerFloor`, highest visible floor at the top. Tapping a room opens a bottom sheet panel with cat slots, furniture slots, and the upgrade button. Bottom tab bar: House | Cats | Diary.
 
 **Web layout (≥ 640px):** Diorama on left (~60% width). Persistent side panel on right shows selected room detail or cat roster.
 

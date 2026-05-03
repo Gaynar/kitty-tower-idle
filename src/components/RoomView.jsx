@@ -18,6 +18,7 @@ export function RoomView({ roomId, draggingCatId, isDragHovered, message, onOpen
   const room = rooms.find((entry) => entry.id === roomId);
   const savedRoom = state.rooms.find((entry) => entry.id === roomId);
   const level = savedRoom?.level ?? 1;
+  const towerFloor = savedRoom?.towerFloor ?? room.towerFloor;
   const assignedCats = state.cats.filter((cat) => cat.currentRoom === roomId);
   const output = calculateRoomOutput(state, roomId);
 
@@ -30,7 +31,7 @@ export function RoomView({ roomId, draggingCatId, isDragHovered, message, onOpen
       className={`room-view ${isDragHovered ? 'drag-hovered' : ''}`}
       data-room-id={roomId}
       style={{ '--room-color': ROOM_COLORS[roomId] }}
-      aria-label={`${room.name}, level ${level}, ${assignedCats.length} of ${roomCapacity(roomId)} cats`}
+      aria-label={`${room.name}, floor ${towerFloor}, level ${level}, ${assignedCats.length} of ${roomCapacity(roomId)} cats`}
     >
       {!imageMissing ? (
         <img
@@ -43,7 +44,10 @@ export function RoomView({ roomId, draggingCatId, isDragHovered, message, onOpen
         <div className="room-fallback" aria-hidden="true" />
       )}
       <div className="room-floor" aria-hidden="true" />
-      <div className="room-label">{room.name}</div>
+      <div className="room-label">
+        <span className="room-floor-badge">{towerFloor}F</span>
+        {room.name}
+      </div>
       <div className="room-output">
         {output.coins.toFixed(1)} coin/min · {output.comfort.toFixed(1)} comfort/min
       </div>
