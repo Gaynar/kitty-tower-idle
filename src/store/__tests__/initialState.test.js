@@ -9,6 +9,10 @@ describe('createInitialState', () => {
       version: 1,
       day: 1,
       phase: 'day',
+      dayPhase: {
+        status: 'idle',
+        elapsedMs: 0,
+      },
       resources: {
         fishbones: 0,
         cannedTuna: 0,

@@ -1,10 +1,23 @@
+import { useEffect } from 'react';
 import { Home, Moon, RotateCcw, Sun } from 'lucide-react';
 import { GameStateProvider, useGameState } from './store/gameState.js';
+import {
+  advanceDayTimer,
+  DAY_DURATION_MS,
+  getDayProduction,
+  returnHomeFromNight,
+  startDayTimer,
+  startNightRun,
+} from './store/dayPhase.js';
 import { resetSave } from './store/persistence.js';
 import './hector.css';
 
 function formatResource(value) {
   return Math.floor(value ?? 0).toLocaleString();
+}
+
+function formatSeconds(ms) {
+  return Math.ceil(ms / 1000).toLocaleString();
 }
 
 function ResourceBar() {
@@ -116,55 +129,95 @@ function HousePanel() {
 function PhaseControls() {
   const { state, setState } = useGameState();
   const isDay = state.phase === 'day';
+  const dayPhase = state.dayPhase ?? { status: 'idle', elapsedMs: 0 };
+  const dayProduction = getDayProduction(state);
+  const progressPercent = Math.min(100, Math.round(((dayPhase.elapsedMs ?? 0) / DAY_DURATION_MS) * 100));
 
-  function startNight() {
-    setState((currentState) => ({
-      ...currentState,
-      phase: 'night',
-      currentRun: {
-        level: 1,
-        xp: 0,
-        hp: currentState.hector.stats.maxHp,
-        mp: currentState.hector.stats.maxMp,
-        abilities: [],
-        items: [],
-        map: [],
-        currentNodeId: null,
-        completedNodeIds: [],
-        status: 'exploring',
-      },
-    }));
+  function handleStartDay() {
+    setState((currentState) => startDayTimer(currentState));
   }
 
-  function returnHome() {
-    setState((currentState) => ({
-      ...currentState,
-      day: currentState.day + 1,
-      phase: 'day',
-      currentRun: null,
-    }));
+  function handleAdvanceDay() {
+    setState((currentState) => advanceDayTimer(currentState, 5_000));
+  }
+
+  function handleStartNight() {
+    setState((currentState) => startNightRun(currentState));
+  }
+
+  function handleReturnHome() {
+    setState((currentState) => returnHomeFromNight(currentState));
   }
 
   return (
     <section className="panel control-panel" aria-labelledby="phase-heading">
       <PhaseBadge />
       <h2 id="phase-heading">{isDay ? 'Prepare for tonight' : 'Back Alley run started'}</h2>
-      <p>
-        {isDay
-          ? 'The full day timer and room preparation loop comes next. For now, the clean Hector save and phase flow are active.'
-          : 'The generated map and combat engine come next. Returning home clears this placeholder run.'}
-      </p>
       {isDay ? (
-        <button className="primary-button" type="button" onClick={startNight}>
-          Start Night
-        </button>
+        <>
+          <p>
+            {dayPhase.status === 'ready'
+              ? "The house has finished today's tiny cat routines. Hector can head out tonight."
+              : 'Start the day timer to let the house prepare resources while the app is open.'}
+          </p>
+          <div className="day-meter" aria-label={`Day progress ${progressPercent}%`}>
+            <div className="day-meter-fill" style={{ width: `${progressPercent}%` }} />
+          </div>
+          <div className="day-summary">
+            <span>{formatSeconds(DAY_DURATION_MS - Math.min(dayPhase.elapsedMs ?? 0, DAY_DURATION_MS))}s left</span>
+            <span>
+              Today: +{dayProduction.fishbones} Fishbones, +{dayProduction.cannedTuna} Tuna
+            </span>
+          </div>
+          {dayPhase.lastGains ? (
+            <p className="last-gains">
+              Prepared +{dayPhase.lastGains.fishbones} Fishbones and +{dayPhase.lastGains.cannedTuna} Canned Tuna.
+            </p>
+          ) : null}
+          <div className="button-row">
+            {dayPhase.status === 'ready' ? (
+              <button className="primary-button" type="button" onClick={handleStartNight}>
+                Start Night
+              </button>
+            ) : (
+              <button className="primary-button" type="button" onClick={handleStartDay}>
+                {dayPhase.status === 'running' ? 'Day Running' : 'Start Day'}
+              </button>
+            )}
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={handleAdvanceDay}
+              disabled={dayPhase.status !== 'running'}
+            >
+              Advance 5s
+            </button>
+          </div>
+        </>
       ) : (
-        <button className="primary-button" type="button" onClick={returnHome}>
-          Return Home
-        </button>
+        <>
+          <p>The generated map and combat engine come next. Returning home clears this placeholder run.</p>
+          <button className="primary-button" type="button" onClick={handleReturnHome}>
+            Return Home
+          </button>
+        </>
       )}
     </section>
   );
+}
+
+function DayTimerTicker() {
+  const { setState } = useGameState();
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setState((currentState) => advanceDayTimer(currentState, 250));
+    }, 250);
+
+    return () => window.clearInterval(intervalId);
+  }, [setState]);
+
+  return null;
 }
 
 function DebugPanel() {
@@ -186,6 +239,7 @@ function DebugPanel() {
 function Game() {
   return (
     <div className="app-shell">
+      <DayTimerTicker />
       <ResourceBar />
       <main className="app-main">
         <PhaseControls />

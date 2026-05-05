@@ -18,7 +18,8 @@ The current repository already contains a React + Vite app with many tower-idle 
 
 - Step 1 is implemented: the app boots as Hector's Adventure, uses `hectorsAdventure_save`, starts from a clean Hector save shape, and includes a development reset-save button.
 - Step 2 is implemented: static Hector data now exists under `src/data/` for resources, house rooms, room upgrades, Hector, Fighter abilities, enemies, statuses, node types, and Back Alley events.
-- Step 3 is partially implemented: the app shell, resource bar, phase indicator, and Day/Night placeholder actions exist. The next pass should replace placeholder phase flow with the real 30-second day timer and house preparation loop.
+- Step 3 is implemented: the app shell, resource bar, phase indicator, and Day/Night flow exist. Day must finish before Start Night appears, and returning home starts the next day.
+- Step 5 is partially implemented: the 30-second day timer runs while the app is open, stores progress in the save, grants simple room preparation output once at completion, and unlocks night. Room output tuning can continue alongside Step 6 upgrades.
 - Legacy tower tests still exist and fail against the new Hector save shape. Rewrite or remove them during Step 16 instead of preserving old cat roster, relationship, furniture, tower, and offline systems.
 
 ---

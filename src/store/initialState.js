@@ -1,11 +1,13 @@
 import { hector } from '../data/hector.js';
 import { houseRooms } from '../data/houseRooms.js';
+import { createDayPhaseState } from './dayPhase.js';
 
 export function createInitialState() {
   return {
     version: 1,
     day: 1,
     phase: 'day',
+    dayPhase: createDayPhaseState(),
     resources: {
       fishbones: 0,
       cannedTuna: 0,
