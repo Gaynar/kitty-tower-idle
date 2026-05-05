@@ -114,11 +114,20 @@ function HousePanel() {
       </div>
       <div className="room-grid">
         {state.house.rooms.map((room) => (
-          <article className="room-card" key={room.id}>
+          <article className={`room-card slot-${room.layoutSlot}`} key={room.id}>
             <p className="room-floor">Floor {room.floor}</p>
             <h3>{room.name}</h3>
             <p>{room.activity}</p>
+            <div className="hector-activity">
+              <span className="hector-token pixel-art" aria-hidden="true">
+                H
+              </span>
+              <span>Hector is {room.hectorActivity}.</span>
+            </div>
             <small>Tier {room.upgradeTier}: {room.effect}</small>
+            <small>
+              Output: +{room.baseDayOutput?.fishbones ?? 0} Fishbones, +{room.baseDayOutput?.cannedTuna ?? 0} Tuna
+            </small>
           </article>
         ))}
       </div>

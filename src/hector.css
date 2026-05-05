@@ -229,16 +229,44 @@ body {
 
 .room-grid {
   display: grid;
+  grid-template-areas:
+    "attic attic"
+    "bedroom storage"
+    "living kitchen";
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+  padding: 10px;
+  border: 3px solid rgba(80, 59, 39, 0.24);
+  border-radius: 8px;
+  background: #e0c09b;
 }
 
 .room-card {
   min-height: 132px;
   padding: 12px;
-  border: 1px solid rgba(80, 59, 39, 0.16);
-  border-radius: 8px;
+  border: 2px solid rgba(80, 59, 39, 0.32);
+  border-radius: 4px;
   background: #fff8eb;
+}
+
+.slot-top {
+  grid-area: attic;
+}
+
+.slot-middle-left {
+  grid-area: bedroom;
+}
+
+.slot-middle-right {
+  grid-area: storage;
+}
+
+.slot-bottom-left {
+  grid-area: living;
+}
+
+.slot-bottom-right {
+  grid-area: kitchen;
 }
 
 .room-card h3 {
@@ -252,6 +280,31 @@ body {
   color: #75634e;
   font-weight: 800;
   line-height: 1.35;
+}
+
+.hector-activity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  color: #4f3b27;
+  font-size: 0.9rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.hector-token {
+  display: inline-grid;
+  flex: 0 0 auto;
+  width: 26px;
+  aspect-ratio: 1;
+  place-items: center;
+  border: 2px solid #4f3b27;
+  border-radius: 4px;
+  background: #f2b36d;
+  color: #4f3b27;
+  font-size: 0.86rem;
+  font-weight: 1000;
 }
 
 .room-floor {
@@ -272,8 +325,17 @@ body {
 
 @media (max-width: 780px) {
   .dashboard-grid,
-  .hector-panel,
+  .hector-panel {
+    grid-template-columns: 1fr;
+  }
+
   .room-grid {
+    grid-template-areas:
+      "attic"
+      "bedroom"
+      "storage"
+      "living"
+      "kitchen";
     grid-template-columns: 1fr;
   }
 
